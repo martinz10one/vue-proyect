@@ -121,7 +121,7 @@
     </div>
 
     <div v-else-if="currentView === 'invoice'" class="invoice-container">
-      <div class="invoice">
+      <div class="invoice" ref="invoiceRef">
         <div class="invoice-header">
           <h2>🧾 Factura</h2>
           <div class="invoice-meta">
@@ -151,8 +151,11 @@
         </div>
 
         <div class="invoice-actions">
-          <button class="add-btn" v-on:click="nuevoPedido">
+          <button class="add-btn" v-on:click="nuevoPedido" style="margin-bottom: 10px;">
             🍽️ Nuevo Pedido
+          </button>
+          <button class="checkout-btn" v-on:click="descargarPDF">
+            📄 Descargar PDF
           </button>
         </div>
       </div>
@@ -162,6 +165,8 @@
 
 <script setup>
 import { ref } from 'vue'
+import jsPDF from 'jspdf'
+import html2canvas from 'html2canvas'
 
 // Productos del menú
 const products = ref([
@@ -327,6 +332,29 @@ const finalizarPedido = () => {
     minute: '2-digit'
   })
   currentView.value = 'invoice'
+}
+
+// Referencia para la factura (PDF)
+const invoiceRef = ref(null)
+
+// Descargar factura en PDF
+const descargarPDF = async () => {
+  if (!invoiceRef.value) return
+
+  try {
+    const canvas = await html2canvas(invoiceRef.value, {
+      scale: 2,
+      backgroundColor: '#ffffff'
+    })
+    const imgData = canvas.toDataURL('image/png')
+    const pdf = new jsPDF('p', 'mm', 'a4')
+    const pdfWidth = pdf.internal.pageSize.getWidth()
+    const pdfHeight = (canvas.height * pdfWidth) / canvas.width
+    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight)
+    pdf.save(`Factura_${invoiceNumber.value}.pdf`)
+  } catch (error) {
+    alert('Error al generar el PDF')
+  }
 }
 
 // Nuevo pedido
