@@ -165,7 +165,15 @@
         <div class="invoice-total">
           <h3>Total a pagar: <span>{{ formatoPrecio(calcularTotal()) }}</span></h3>
         </div>
+      </div>
 
+      <div class="invoice-actions">
+        <button class="add-btn" v-on:click="nuevoPedido" style="margin-bottom: 10px;">
+          🍽️ Nuevo Pedido
+        </button>
+        <button class="checkout-btn" v-on:click="descargarPDF">
+          📄 Descargar PDF
+        </button>
       </div>
     </div>
   </div>
