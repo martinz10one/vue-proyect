@@ -338,6 +338,22 @@ body {
   box-shadow: 0 8px 25px rgba(231, 7, 7, 0.5);
 }
 
+.fab-cart {
+  left: 30px;
+  right: auto;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  font-size: 1.2rem;
+  width: auto;
+  height: auto;
+  padding: 12px 20px;
+  border-radius: 50px;
+  gap: 5px;
+}
+
+.fab-cart:hover {
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+}
+
 /* Botón eliminar en tarjetas de producto */
 
 .delete-btn {

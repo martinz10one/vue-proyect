@@ -13,14 +13,7 @@
       >
         📋 Menú
       </button>
-      <button 
-        class="tab-btn" 
-        v-show="cart.length > 0"
-        v-on:click="currentView = 'cart'"
-        :class="{ active: currentView === 'cart' }"
-      >
-        🛒 Carrito ({{ cart.length }})
-      </button>
+
     </div>
 
     <button 
@@ -30,6 +23,15 @@
       v-show="currentView === 'menu'"
     >
       ➕
+    </button>
+
+    <button 
+      class="fab fab-cart" 
+      v-on:click="currentView = 'cart'"
+      :class="{ active: currentView === 'cart' }"
+      title="Carrito"
+    >
+      🛒 {{ cart.length }}
     </button>
 
     <div v-if="currentView === 'menu'">       
