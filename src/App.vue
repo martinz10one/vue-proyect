@@ -5,6 +5,20 @@
       <p>Selecciona tus platos favoritos</p>
     </div>
 
+    <div v-if="notification.show" :class="['notification', notification.type]">
+      {{ notification.message }}
+    </div>
+
+    <div v-if="confirmDialog.show" class="confirm-overlay" v-on:click="cerrarConfirm">
+      <div class="confirm-modal" v-on:click.stop>
+        <p>{{ confirmDialog.message }}</p>
+        <div class="confirm-buttons">
+          <button class="tab-btn" v-on:click="confirmDialog.onConfirm(); cerrarConfirm()">Sí</button>
+          <button class="tab-btn" v-on:click="cerrarConfirm">Cancelar</button>
+        </div>
+      </div>
+    </div>
+
     <div class="tabs">
       <button 
         class="tab-btn" 
@@ -13,7 +27,6 @@
       >
         📋 Menú
       </button>
-
     </div>
 
     <button 
@@ -34,19 +47,26 @@
       🛒 {{ cart.length }}
     </button>
 
-    <div v-if="currentView === 'menu'">       
+    <div v-if="currentView === 'menu'">
+      <div class="search-bar">
+        <input 
+          v-model="searchQuery" 
+          type="text" 
+          placeholder="🔍 Buscar producto..."
+          class="search-input"
+        >
+      </div>
       <div class="menu-grid">
-
-        <div v-for="product in products" :key="product.id" class="product-card"> 
+        <div v-for="product in filteredProducts" :key="product.id" class="product-card"> 
           <img :src="product.image" :alt="product.name">
           <div class="product-info">
             <h3>{{ product.name }}</h3>
-            <div class="price">{{ product.price }} COP</div>
+            <div class="price">{{ formatoPrecio(product.price) }}</div>
             <div>Disponible: {{ product.available }}</div>
             <button class="add-btn" v-on:click="agregarAlCarrito(product.id)" :disabled="product.available <= 0">
               Añadir al carrito
             </button>
-            <button class="delete-btn" v-on:click="eliminarProducto(product.id)">
+            <button class="delete-btn" v-on:click="confirmarEliminar(product.id)">
               🗑️ Eliminar
             </button>
           </div>
@@ -63,7 +83,7 @@
         </div>
         <div class="form-group">
           <label>Precio (COP)</label>
-          <input v-model.number="newProduct.price" type="number" placeholder="Ej: 45000">
+          <input v-model.number="newProduct.price" type="number" placeholder="Ej: 45000" min="0">
         </div>
         <div class="form-group">
           <label>URL de la imagen</label>
@@ -71,12 +91,11 @@
         </div>
         <div class="form-group">
           <label>Cantidad disponible</label>
-          <input v-model.number="newProduct.available" type="number" placeholder="Ej: 50">
+          <input v-model.number="newProduct.available" type="number" placeholder="Ej: 50" min="0">
         </div>
         <button class="add-btn" v-on:click="guardarProducto">Guardar Producto</button>
       </div>
     </div>
-    
 
     <div v-else-if="currentView === 'cart'">
       <div v-if="cart.length === 0" class="empty-cart">
@@ -85,13 +104,11 @@
         <button class="tab-btn" v-on:click="currentView = 'menu'">Ver Menú</button>
       </div>
 
-
-
       <div v-else class="cart-list">
         <div v-for="item in cart" :key="item.id" class="cart-item">
           <div class="cart-details">
             <h4>{{ item.name }}</h4>
-            <span class="cart-price">{{ item.price }} COP</span>
+            <span class="cart-price">{{ formatoPrecio(item.price) }}</span>
           </div>
           <div class="quantity-controls">
             <button class="qty-btn" v-on:click="cambiarCantidad(item.id, -1)">-</button>
@@ -102,10 +119,9 @@
             Remover
           </button>
         </div>
-        
 
         <div class="total">
-          <h3>Total: <span class="total-amount">{{ calcularTotal() }} COP</span></h3>
+          <h3>Total: <span class="total-amount">{{ formatoPrecio(calcularTotal()) }}</span></h3>
           <div style="margin-top: 20px;">
             <button class="add-btn" style="width: 200px;" v-on:click="vaciarCarrito">
               Vaciar Carrito
@@ -141,13 +157,13 @@
           <div v-for="item in cart" :key="item.id" class="invoice-row">
             <span>{{ item.name }}</span>
             <span>{{ item.quantity }}</span>
-            <span>{{ item.price.toFixed(2) }} COP</span>
-            <span>{{ (item.price * item.quantity).toFixed(2) }} COP</span>
+            <span>{{ formatoPrecio(item.price) }}</span>
+            <span>{{ formatoPrecio(item.price * item.quantity) }}</span>
           </div>
         </div>
 
         <div class="invoice-total">
-          <h3>Total a pagar: <span>{{ calcularTotal() }} COP</span></h3>
+          <h3>Total a pagar: <span>{{ formatoPrecio(calcularTotal()) }}</span></h3>
         </div>
 
         <div class="invoice-actions">
@@ -164,9 +180,24 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import jsPDF from 'jspdf'
 import html2canvas from 'html2canvas'
+
+const formatoPrecio = (value) => {
+  return '$' + Math.round(value).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ' COP'
+}
+
+const notificar = (message, type = 'success') => {
+  notification.value = { show: true, message, type }
+  setTimeout(() => {
+    notification.value.show = false
+  }, 3000)
+}
+
+const cerrarConfirm = () => {
+  confirmDialog.value.show = false
+}
 
 // Productos del menú
 const products = ref([
@@ -202,17 +233,26 @@ const products = ref([
   { id: 30, name: '🧋 Té Helado', price: 13000, available: 160, image: 'https://imag.bonviveur.com/te-helado.jpg' }
 ])
 
-// Estado del carrito
-const cart = ref([])
+const searchQuery = ref('')
 
-// Vista actual
+const filteredProducts = computed(() => {
+  const query = searchQuery.value.toLowerCase().trim()
+  if (!query) return products.value
+  return products.value.filter(p =>
+    p.name.toLowerCase().includes(query)
+  )
+})
+
+const cart = ref([])
 const currentView = ref('menu')
 
-// Datos de factura
 const invoiceNumber = ref('')
 const invoiceDate = ref('')
 
-// Nuevo producto form
+const notification = ref({ show: false, message: '', type: 'success' })
+
+const confirmDialog = ref({ show: false, message: '', onConfirm: () => {} })
+
 const newProduct = ref({
   name: '',
   price: 0,
@@ -221,8 +261,25 @@ const newProduct = ref({
 })
 
 const guardarProducto = () => {
-  if (!newProduct.value.name || !newProduct.value.image || newProduct.value.price <= 0) {
-    alert('Por favor completa todos los campos correctamente')
+  const name = newProduct.value.name.trim()
+  const image = newProduct.value.image.trim()
+  const price = newProduct.value.price
+  const available = newProduct.value.available
+
+  if (!name) {
+    notificar('El nombre del producto es obligatorio', 'error')
+    return
+  }
+  if (!image) {
+    notificar('La URL de la imagen es obligatoria', 'error')
+    return
+  }
+  if (price <= 0) {
+    notificar('El precio debe ser mayor a 0', 'error')
+    return
+  }
+  if (available < 0) {
+    notificar('La cantidad disponible no puede ser negativa', 'error')
     return
   }
 
@@ -230,25 +287,36 @@ const guardarProducto = () => {
 
   products.value.push({
     id: newId,
-    name: newProduct.value.name,
-    price: newProduct.value.price,
-    available: newProduct.value.available,
-    image: newProduct.value.image
+    name,
+    price,
+    available,
+    image
   })
 
   newProduct.value = { name: '', price: 0, available: 0, image: '' }
   currentView.value = 'menu'
+  notificar('Producto guardado exitosamente', 'success')
 }
 
-const eliminarProducto = (productId) => {
-  if (!confirm('¿Estás seguro de que deseas eliminar este producto?')) return
-  const index = products.value.findIndex(p => p.id === productId)
-  if (index > -1) {
-    products.value.splice(index, 1)
+let pendingDeleteId = null
+
+const confirmarEliminar = (productId) => {
+  const product = products.value.find(p => p.id === productId)
+  if (!product) return
+  pendingDeleteId = productId
+  confirmDialog.value = {
+    show: true,
+    message: `¿Estás seguro de eliminar "${product.name}"?`,
+    onConfirm: () => {
+      const index = products.value.findIndex(p => p.id === pendingDeleteId)
+      if (index > -1) {
+        products.value.splice(index, 1)
+        notificar('Producto eliminado', 'success')
+      }
+    }
   }
 }
 
-// Añadir producto al carrito
 const agregarAlCarrito = (productId) => {
   const product = products.value.find(p => p.id === productId)
   if (!product || product.available <= 0) return
@@ -266,7 +334,6 @@ const agregarAlCarrito = (productId) => {
   product.available -= 1
 }
 
-// Cambiar cantidad
 const cambiarCantidad = (productId, change) => {
   const item = cart.value.find(item => item.id === productId)
   const product = products.value.find(p => p.id === productId)
@@ -287,7 +354,6 @@ const cambiarCantidad = (productId, change) => {
   }
 }
 
-// Remover del carrito
 const removerDelCarrito = (productId) => {
   const index = cart.value.findIndex(item => item.id === productId)
   if (index > -1) {
@@ -300,27 +366,32 @@ const removerDelCarrito = (productId) => {
   }
 }
 
-// Vaciar carrito
 const vaciarCarrito = () => {
-  for (const item of cart.value) {
-    const product = products.value.find(p => p.id === item.id)
-    if (product) {
-      product.available += item.quantity
+  if (cart.value.length === 0) return
+  confirmDialog.value = {
+    show: true,
+    message: '¿Estás seguro de vaciar el carrito?',
+    onConfirm: () => {
+      for (const item of cart.value) {
+        const product = products.value.find(p => p.id === item.id)
+        if (product) {
+          product.available += item.quantity
+        }
+      }
+      cart.value = []
+      notificar('Carrito vaciado', 'success')
     }
   }
-  cart.value = []
 }
 
-// Calcular total
 const calcularTotal = () => {
   let total = 0
   for (let i = 0; i < cart.value.length; i++) {
     total += cart.value[i].price * cart.value[i].quantity
   }
-  return total.toFixed(2)
+  return total
 }
 
-// Finalizar pedido y generar factura
 const finalizarPedido = () => {
   const now = new Date()
   invoiceNumber.value = Math.floor(Math.random() * 1000000).toString().padStart(6, '0')
@@ -334,30 +405,46 @@ const finalizarPedido = () => {
   currentView.value = 'invoice'
 }
 
-// Referencia para la factura (PDF)
 const invoiceRef = ref(null)
 
-// Descargar factura en PDF
 const descargarPDF = async () => {
   if (!invoiceRef.value) return
 
   try {
-    const canvas = await html2canvas(invoiceRef.value, {
-      scale: 2,
-      backgroundColor: '#ffffff'
-    })
-    const imgData = canvas.toDataURL('image/png')
     const pdf = new jsPDF('p', 'mm', 'a4')
     const pdfWidth = pdf.internal.pageSize.getWidth()
-    const pdfHeight = (canvas.height * pdfWidth) / canvas.width
-    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight)
+
+    const canvas = await html2canvas(invoiceRef.value, {
+      scale: 2,
+      backgroundColor: '#ffffff',
+      logging: false
+    })
+
+    const imgData = canvas.toDataURL('image/png')
+    const imgHeight = (canvas.height * pdfWidth) / canvas.width
+    const pageHeight = pdf.internal.pageSize.getHeight()
+
+    let heightLeft = imgHeight
+    let position = 0
+
+    pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight)
+    heightLeft -= pageHeight
+
+    while (heightLeft > 0) {
+      position -= pageHeight
+      pdf.addPage()
+      pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight)
+      heightLeft -= pageHeight
+    }
+
     pdf.save(`Factura_${invoiceNumber.value}.pdf`)
+    cart.value = []
+    notificar('Factura descargada. Carrito limpiado.', 'success')
   } catch (error) {
-    alert('Error al generar el PDF')
+    notificar('Error al generar el PDF', 'error')
   }
 }
 
-// Nuevo pedido
 const nuevoPedido = () => {
   cart.value = []
   currentView.value = 'menu'
@@ -365,7 +452,6 @@ const nuevoPedido = () => {
 </script>
 
 <style scoped>
-/* Estilos específicos del componente si es necesario */
 .container {
   min-height: 100vh;
 }
