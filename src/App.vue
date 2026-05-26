@@ -17,7 +17,7 @@
           <button class="tab-btn" v-on:click="cerrarConfirm">Cancelar</button>
         </div>
       </div>
-    </div>t
+    </div>
 
     <div class="tabs">
       <button 
@@ -313,6 +313,10 @@ const guardarProducto = () => {
   }
   if (!image) {
     notificar('La URL de la imagen es obligatoria', 'error')
+    return
+  }
+  if (!/^https?:\/\/.+\.(jpg|jpeg|png|gif|webp|svg|avif|bmp)(\?.*)?$/i.test(image)) {
+    notificar('La URL debe ser una imagen válida (jpg, png, gif, webp, etc.)', 'error')
     return
   }
   if (price <= 0) {
