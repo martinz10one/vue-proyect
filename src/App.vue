@@ -17,7 +17,7 @@
           <button class="tab-btn" v-on:click="cerrarConfirm">Cancelar</button>
         </div>
       </div>
-    </div>
+    </div>t
 
     <div class="tabs">
       <button 
@@ -453,30 +453,23 @@ const descargarPDF = async () => {
   if (!invoiceRef.value) return
 
   try {
-    const pdf = new jsPDF('p', 'mm', 'a4')
-    const pdfWidth = pdf.internal.pageSize.getWidth()
-
     const canvas = await html2canvas(invoiceRef.value, {
-      scale: 2,
+      scale: 1.5,
       backgroundColor: '#ffffff',
       logging: false
     })
 
     const imgData = canvas.toDataURL('image/png')
-    const imgHeight = (canvas.height * pdfWidth) / canvas.width
+    const pdf = new jsPDF('p', 'mm', [80, 200])
+    const pdfWidth = pdf.internal.pageSize.getWidth()
     const pageHeight = pdf.internal.pageSize.getHeight()
+    const imgHeight = (canvas.height * pdfWidth) / canvas.width
 
-    let heightLeft = imgHeight
-    let position = 0
-
-    pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight)
-    heightLeft -= pageHeight
-
-    while (heightLeft > 0) {
-      position -= pageHeight
-      pdf.addPage()
-      pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight)
-      heightLeft -= pageHeight
+    if (imgHeight > pageHeight) {
+      const scale = pageHeight / imgHeight
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth * scale, imgHeight * scale)
+    } else {
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, imgHeight)
     }
 
     pdf.save(`Factura_${invoiceNumber.value}.pdf`)
