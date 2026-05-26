@@ -158,7 +158,7 @@
           </div>
           <div style="margin-top: 15px;">
             <button class="checkout-btn" style="width: 200px;" v-on:click="finalizarPedido">
-              ✅ Finalizar Pedido
+               Finalizar Pedido
             </button>
           </div>
         </div>
@@ -168,7 +168,7 @@
     <div v-else-if="currentView === 'invoice'" class="invoice-container">
       <div class="invoice" ref="invoiceRef">
         <div class="invoice-header">
-          <h2>🧾 Factura</h2>
+          <h2> Factura</h2>
           <div class="invoice-meta">
             <p><strong>Nº Factura:</strong> #{{ invoiceNumber }}</p>
             <p><strong>Fecha:</strong> {{ invoiceDate }}</p>
