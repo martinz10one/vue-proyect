@@ -31,7 +31,7 @@
 
     <div v-if="showCategoryMenu" class="dropdown-overlay" v-on:click="showCategoryMenu = false"></div>
 
-    <div class="fab-bar">
+    <div class="fab-bar" v-show="currentView === 'menu'">
       <button 
         class="fab-btn" 
         v-on:click="currentView = 'addProduct'"
