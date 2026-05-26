@@ -29,33 +29,56 @@
       </button>
     </div>
 
-    <button 
-      class="fab" 
-      v-on:click="currentView = 'addProduct'"
-      title="Agregar Producto"
-      v-show="currentView === 'menu'"
-    >
-      ➕
-    </button>
+    <div v-if="showCategoryMenu" class="dropdown-overlay" v-on:click="showCategoryMenu = false"></div>
 
-    <button 
-      class="fab fab-cart" 
-      v-on:click="currentView = 'cart'"
-      :class="{ active: currentView === 'cart' }"
-      title="Carrito"
-    >
-      🛒 {{ cart.length }}
-    </button>
+    <div class="fab-bar">
+      <button 
+        class="fab-btn" 
+        v-on:click="currentView = 'addProduct'"
+        title="Agregar Producto"
+        v-show="currentView === 'menu'"
+      >
+        ➕
+      </button>
+
+      <div class="fab-category-section">
+        <button 
+          class="fab-btn" 
+          v-on:click="showCategoryMenu = !showCategoryMenu"
+          title="Filtrar por categoría"
+        >
+          📂
+        </button>
+        <div v-if="showCategoryMenu" class="category-dropdown">
+          <button 
+            v-for="cat in categories" 
+            :key="cat.key"
+            class="category-option"
+            :class="{ active: selectedCategory === cat.key }"
+            v-on:click="selectedCategory = cat.key; showCategoryMenu = false"
+          >
+            {{ cat.label }}
+          </button>
+        </div>
+      </div>
+
+      <button 
+        class="fab-btn fab-cart-btn" 
+        v-on:click="currentView = 'cart'"
+        :class="{ active: currentView === 'cart' }"
+        title="Carrito"
+      >
+        🛒 {{ cart.length }}
+      </button>
+    </div>
 
     <div v-if="currentView === 'menu'">
-      <div class="search-bar">
-        <input 
-          v-model="searchQuery" 
-          type="text" 
-          placeholder="🔍 Buscar producto..."
-          class="search-input"
-        >
+      <div class="category-filter">
+        <select v-model="selectedCategory" class="category-select">
+          <option v-for="cat in categories" :key="cat.key" :value="cat.key">{{ cat.label }}</option>
+        </select>
       </div>
+
       <div class="menu-grid">
         <div v-for="product in filteredProducts" :key="product.id" class="product-card"> 
           <img :src="product.image" :alt="product.name">
@@ -80,6 +103,12 @@
         <div class="form-group">
           <label>Nombre del producto</label>
           <input v-model="newProduct.name" type="text" placeholder="Ej: 🍔 Hamburguesa Especial">
+        </div>
+        <div class="form-group">
+          <label>Categoría</label>
+          <select v-model="newProduct.category" class="search-input">
+            <option v-for="cat in categories" :key="cat.key" :value="cat.key">{{ cat.label }}</option>
+          </select>
         </div>
         <div class="form-group">
           <label>Precio (COP)</label>
@@ -199,48 +228,59 @@ const cerrarConfirm = () => {
   confirmDialog.value.show = false
 }
 
-// Productos del menú
+const categories = [
+  { key: 'todas', label: '🍽️ Todas' },
+  { key: 'hamburguesas', label: '🍔 Hamburguesas' },
+  { key: 'pizzas', label: '🍕 Pizzas' },
+  { key: 'pastas', label: '🍝 Pastas' },
+  { key: 'ensaladas', label: '🥗 Ensaladas' },
+  { key: 'pollo', label: '🍗 Pollo' },
+  { key: 'carnes', label: '🥩 Carnes' },
+  { key: 'mexicanos', label: '🌮 Mexicanos' },
+  { key: 'acompanamientos', label: '🍟 Acompañamientos' },
+  { key: 'postres', label: '🍰 Postres' },
+  { key: 'bebidas', label: '🥤 Bebidas' }
+]
+
+const selectedCategory = ref('todas')
+const showCategoryMenu = ref(false)
+
 const products = ref([
-  { id: 1, name: '🍔 Hamburguesa Clásica', price: 45000, available: 100, image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=300&h=200&fit=crop' },
-  { id: 2, name: '🍔 Cheeseburger', price: 48000, available: 80, image: 'https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=300&h=200&fit=crop' },
-  { id: 3, name: '🍕 Pizza Margherita', price: 50000, available: 50, image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Pizza_Margherita_stu_spivack.jpg/1280px-Pizza_Margherita_stu_spivack.jpg' },
-  { id: 4, name: '🍕 Pizza Pepperoni', price: 55000, available: 40, image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSzCw_1kFdC1njIh3bNk8GX5SWK63bWux7rCUAbd5VLv34ZVeeMEfoB0U-tKLY54DXEyOqgkshHjoHC3_DCgMG1yc6RyB3tTdSCb-FHeRh4MLLIjMCqrBh73kVmBmS99w&s=10&ec=121638510' },
-  { id: 5, name: '🍝 Pasta Carbonara', price: 49000, available: 60, image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTCG_ceFRB7gtNE57WFZ22oSe46hDfHq7dNkDvSDTzFtwxGKVJSzYt_n96oIUxfPEYaW6ohzjZgbzAejccHdtreB-aur7-Qyp1qRia4QOrxgK-ed5oTWsR1hMoU42bGjg&s=10&ec=121638510' },
-  { id: 6, name: '🍝 Spaghetti Boloñesa', price: 51000, available: 70, image: 'https://cdn.stoneline.de/media/c5/63/4f/1727429313/spaghetti-bolognese.jpeg?ts=1727429313' },
-  { id: 7, name: '🥗 Ensalada César', price: 34000, available: 90, image: 'https://i.etsystatic.com/64700415/r/il/1b9c42/7914965166/il_794xN.7914965166_o5dq.jpg' },
-  { id: 8, name: '🥗 Ensalada Mediterránea', price: 38000, available: 85, image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=300&h=200&fit=crop' },
-  { id: 9, name: '🍗 Pollo Asado', price: 57000, available: 45, image: 'https://www.mycolombianrecipes.com/wp-content/uploads/2009/11/Pollo-Asado1.JPG' },
-  { id: 10, name: '🍗 Pollo BBQ', price: 61000, available: 55, image: 'https://popmenucloud.com/cdn-cgi/image/width%3D1200%2Cheight%3D1200%2Cfit%3Dscale-down%2Cformat%3Dauto%2Cquality%3D60/coejiwxh/86e3017d-dfe9-41f1-8c7c-75eb3feb0fab.png' },
-  { id: 11, name: '🥩 Filete de Res', price: 80000, available: 30, image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQTNHuB89DUT9LRbtUwYdgbQsoFUrUpo1Oh8Q&s' },
-  { id: 12, name: '🐟 Salmón a la Plancha', price: 70000, available: 35, image: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=300&h=200&fit=crop' },
-  { id: 13, name: '🌮 Tacos Al Pastor', price: 39000, available: 75, image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTXiNsnnAfPLpQdWnxXVBCSpen0f_Prp31lig&s' },
-  { id: 14, name: '🌯 Burrito', price: 45000, available: 65, image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRtTqN58dYomkxVX-npQrq9W8A1YhBnUlrWOg&s' },
-  { id: 15, name: '🍛 Curry Vegetariano', price: 46000, available: 50, image: 'https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=300&h=200&fit=crop' },
-  { id: 16, name: '🍜 Pad Thai', price: 52000, available: 40, image: 'https://inquiringchef.com/wp-content/uploads/2023/02/Authentic-Pad-Thai_square-1908-500x375.jpg' },
-  { id: 17, name: '🍟 Papas Fritas', price: 20000, available: 120, image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQigYPCWW5JEV2bHWdhRHEX5hWlZ4eHIoOksg&s' },
-  { id: 18, name: '🧅 Cebollas Fritas', price: 22000, available: 100, image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSNBWAykjm1gavFb9W3jttbWTMMuXmsEqrFQw&s' },
-  { id: 19, name: '🍦 Tiramisú', price: 24000, available: 80, image: 'https://kitchen-by-the-sea.com/wp-content/uploads/2022/04/Tiramisu-16.jpg' },
-  { id: 20, name: '🍮 Flan', price: 20500, available: 95, image: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=300&h=200&fit=crop' },
-  { id: 21, name: '🍩 Cheesecake', price: 26000, available: 70, image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRpS6yaJcvttjlTPYohqV_7Kgc-WjBUwY8iYw&s' },
-  { id: 22, name: '🍹 Mojito', price: 30000, available: 60, image: 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=300&h=200&fit=crop' },
-  { id: 23, name: '🍺 Cerveza', price: 17000, available: 150, image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTA-usyISLS65O_RplJQ6qyeRmcbodqw7OxTw&s' },
-  { id: 24, name: '🍷 Vino Tinto', price: 27000, available: 50, image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTd943sxnAjf5BqXapY-YUGTnNdYR45f9cK5A&s' },
-  { id: 25, name: '🥤 Refresco', price: 12000, available: 200, image: 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=300&h=200&fit=crop' },
-  { id: 26, name: '☕ Café Americano', price: 10000, available: 180, image: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=300&h=200&fit=crop' },
-  { id: 27, name: '🧋 Bubble Tea', price: 19000, available: 90, image: 'https://www.figjar.com/wp-content/uploads/2025/03/strawberry-bubble-tea.jpg' },
-  { id: 28, name: '🥛 Batido Fresa', price: 22000, available: 85, image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTzJIIeT1-lD6TiLCoTopZvjSXpd2i1Grmc2A&s' },
-  { id: 29, name: '🍉 Agua Fresca Sandía', price: 15000, available: 110, image: 'https://lolascocina.com/wp-content/uploads/2015/07/2025.05.17-Agua-de-Sandia-WEB-13.jpg' },
-  { id: 30, name: '🧋 Té Helado', price: 13000, available: 160, image: 'https://imag.bonviveur.com/te-helado.jpg' }
+  { id: 1, name: '🍔 Hamburguesa Clásica', category: 'hamburguesas', price: 45000, available: 100, image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=300&h=200&fit=crop' },
+  { id: 2, name: '🍔 Cheeseburger', category: 'hamburguesas', price: 48000, available: 80, image: 'https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=300&h=200&fit=crop' },
+  { id: 3, name: '🍕 Pizza Margherita', category: 'pizzas', price: 50000, available: 50, image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Pizza_Margherita_stu_spivack.jpg/1280px-Pizza_Margherita_stu_spivack.jpg' },
+  { id: 4, name: '🍕 Pizza Pepperoni', category: 'pizzas', price: 55000, available: 40, image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSzCw_1kFdC1njIh3bNk8GX5SWK63bWux7rCUAbd5VLv34ZVeeMEfoB0U-tKLY54DXEyOqgkshHjoHC3_DCgMG1yc6RyB3tTdSCb-FHeRh4MLLIjMCqrBh73kVmBmS99w&s=10&ec=121638510' },
+  { id: 5, name: '🍝 Pasta Carbonara', category: 'pastas', price: 49000, available: 60, image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTCG_ceFRB7gtNE57WFZ22oSe46hDfHq7dNkDvSDTzFtwxGKVJSzYt_n96oIUxfPEYaW6ohzjZgbzAejccHdtreB-aur7-Qyp1qRia4QOrxgK-ed5oTWsR1hMoU42bGjg&s=10&ec=121638510' },
+  { id: 6, name: '🍝 Spaghetti Boloñesa', category: 'pastas', price: 51000, available: 70, image: 'https://cdn.stoneline.de/media/c5/63/4f/1727429313/spaghetti-bolognese.jpeg?ts=1727429313' },
+  { id: 7, name: '🥗 Ensalada César', category: 'ensaladas', price: 34000, available: 90, image: 'https://i.etsystatic.com/64700415/r/il/1b9c42/7914965166/il_794xN.7914965166_o5dq.jpg' },
+  { id: 8, name: '🥗 Ensalada Mediterránea', category: 'ensaladas', price: 38000, available: 85, image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=300&h=200&fit=crop' },
+  { id: 9, name: '🍗 Pollo Asado', category: 'pollo', price: 57000, available: 45, image: 'https://www.mycolombianrecipes.com/wp-content/uploads/2009/11/Pollo-Asado1.JPG' },
+  { id: 10, name: '🍗 Pollo BBQ', category: 'pollo', price: 61000, available: 55, image: 'https://popmenucloud.com/cdn-cgi/image/width%3D1200%2Cheight%3D1200%2Cfit%3Dscale-down%2Cformat%3Dauto%2Cquality%3D60/coejiwxh/86e3017d-dfe9-41f1-8c7c-75eb3feb0fab.png' },
+  { id: 11, name: '🥩 Filete de Res', category: 'carnes', price: 80000, available: 30, image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQTNHuB89DUT9LRbtUwYdgbQsoFUrUpo1Oh8Q&s' },
+  { id: 12, name: '🐟 Salmón a la Plancha', category: 'carnes', price: 70000, available: 35, image: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=300&h=200&fit=crop' },
+  { id: 13, name: '🌮 Tacos Al Pastor', category: 'mexicanos', price: 39000, available: 75, image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTXiNsnnAfPLpQdWnxXVBCSpen0f_Prp31lig&s' },
+  { id: 14, name: '🌯 Burrito', category: 'mexicanos', price: 45000, available: 65, image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRtTqN58dYomkxVX-npQrq9W8A1YhBnUlrWOg&s' },
+  { id: 15, name: '🍛 Curry Vegetariano', category: 'acompanamientos', price: 46000, available: 50, image: 'https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=300&h=200&fit=crop' },
+  { id: 16, name: '🍜 Pad Thai', category: 'acompanamientos', price: 52000, available: 40, image: 'https://inquiringchef.com/wp-content/uploads/2023/02/Authentic-Pad-Thai_square-1908-500x375.jpg' },
+  { id: 17, name: '🍟 Papas Fritas', category: 'acompanamientos', price: 20000, available: 120, image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQigYPCWW5JEV2bHWdhRHEX5hWlZ4eHIoOksg&s' },
+  { id: 18, name: '🧅 Cebollas Fritas', category: 'acompanamientos', price: 22000, available: 100, image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSNBWAykjm1gavFb9W3jttbWTMMuXmsEqrFQw&s' },
+  { id: 19, name: '🍦 Tiramisú', category: 'postres', price: 24000, available: 80, image: 'https://kitchen-by-the-sea.com/wp-content/uploads/2022/04/Tiramisu-16.jpg' },
+  { id: 20, name: '🍮 Flan', category: 'postres', price: 20500, available: 95, image: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=300&h=200&fit=crop' },
+  { id: 21, name: '🍩 Cheesecake', category: 'postres', price: 26000, available: 70, image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRpS6yaJcvttjlTPYohqV_7Kgc-WjBUwY8iYw&s' },
+  { id: 22, name: '🍹 Mojito', category: 'bebidas', price: 30000, available: 60, image: 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=300&h=200&fit=crop' },
+  { id: 23, name: '🍺 Cerveza', category: 'bebidas', price: 17000, available: 150, image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTA-usyISLS65O_RplJQ6qyeRmcbodqw7OxTw&s' },
+  { id: 24, name: '🍷 Vino Tinto', category: 'bebidas', price: 27000, available: 50, image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTd943sxnAjf5BqXapY-YUGTnNdYR45f9cK5A&s' },
+  { id: 25, name: '🥤 Refresco', category: 'bebidas', price: 12000, available: 200, image: 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=300&h=200&fit=crop' },
+  { id: 26, name: '☕ Café Americano', category: 'bebidas', price: 10000, available: 180, image: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=300&h=200&fit=crop' },
+  { id: 27, name: '🧋 Bubble Tea', category: 'bebidas', price: 19000, available: 90, image: 'https://www.figjar.com/wp-content/uploads/2025/03/strawberry-bubble-tea.jpg' },
+  { id: 28, name: '🥛 Batido Fresa', category: 'bebidas', price: 22000, available: 85, image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTzJIIeT1-lD6TiLCoTopZvjSXpd2i1Grmc2A&s' },
+  { id: 29, name: '🍉 Agua Fresca Sandía', category: 'bebidas', price: 15000, available: 110, image: 'https://lolascocina.com/wp-content/uploads/2015/07/2025.05.17-Agua-de-Sandia-WEB-13.jpg' },
+  { id: 30, name: '🧋 Té Helado', category: 'bebidas', price: 13000, available: 160, image: 'https://imag.bonviveur.com/te-helado.jpg' }
 ])
 
-const searchQuery = ref('')
-
 const filteredProducts = computed(() => {
-  const query = searchQuery.value.toLowerCase().trim()
-  if (!query) return products.value
-  return products.value.filter(p =>
-    p.name.toLowerCase().includes(query)
-  )
+  if (selectedCategory.value === 'todas') return products.value
+  return products.value.filter(p => p.category === selectedCategory.value)
 })
 
 const cart = ref([])
@@ -255,6 +295,7 @@ const confirmDialog = ref({ show: false, message: '', onConfirm: () => {} })
 
 const newProduct = ref({
   name: '',
+  category: 'hamburguesas',
   price: 0,
   available: 0,
   image: ''
@@ -288,12 +329,13 @@ const guardarProducto = () => {
   products.value.push({
     id: newId,
     name,
+    category: newProduct.value.category,
     price,
     available,
     image
   })
 
-  newProduct.value = { name: '', price: 0, available: 0, image: '' }
+  newProduct.value = { name: '', category: 'hamburguesas', price: 0, available: 0, image: '' }
   currentView.value = 'menu'
   notificar('Producto guardado exitosamente', 'success')
 }

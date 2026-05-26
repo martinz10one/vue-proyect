@@ -323,25 +323,141 @@ body {
 
 
 
-/* Botón flotante agregar producto */
-.fab {
+/* Overlay para cerrar menú */
+.dropdown-overlay {
   position: fixed;
-  bottom: 30px;
-  right: 30px;
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
-  color: white;
-  border: none;
-  font-size: 1.8rem;
-  cursor: pointer;
-  box-shadow: 0 6px 20px rgba(46, 204, 113, 0.4);
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 999;
+}
+
+/* Barra flotante inferior */
+.fab-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  padding: 12px 20px;
+  background: rgba(30, 30, 50, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   z-index: 1000;
+  border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+.fab-btn {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
   transition: all 0.3s ease;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+.fab-btn:hover {
+  transform: scale(1.1);
+}
+
+.fab-btn:first-child {
+  background: linear-gradient(135deg, #2ecc71, #27ae60);
+  color: white;
+}
+
+.fab-btn:first-child:hover {
+  box-shadow: 0 6px 20px rgba(46, 204, 113, 0.5);
+}
+
+.fab-cart-btn {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  font-size: 1.1rem;
+  width: auto;
+  height: 56px;
+  padding: 0 20px;
+  border-radius: 28px;
+  gap: 6px;
+}
+
+.fab-cart-btn:hover {
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+}
+
+.fab-cart-btn.active {
+  box-shadow: 0 0 0 3px rgba(255,255,255,0.5), 0 6px 20px rgba(102, 126, 234, 0.5);
+}
+
+/* Botón flotante categoría */
+.fab-category-section {
+  position: relative;
+}
+
+.fab-category-section .fab-btn {
+  background: linear-gradient(135deg, #f39c12, #e67e22);
+  color: white;
+}
+
+.fab-category-section .fab-btn:hover {
+  box-shadow: 0 6px 20px rgba(243, 156, 18, 0.5);
+}
+
+.category-dropdown {
+  position: absolute;
+  bottom: 66px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  border-radius: 15px;
+  padding: 8px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+  min-width: 220px;
+  animation: slideUp 0.2s ease;
+}
+
+.category-option {
+  display: block;
+  width: 100%;
+  padding: 10px 16px;
+  border: none;
+  background: none;
+  color: #333;
+  font-size: 1rem;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+}
+
+.category-option:hover {
+  background: #f0f0ff;
+  color: #667eea;
+}
+
+.category-option.active {
+  background: #667eea;
+  color: white;
+  font-weight: 600;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
 }
 
 .fab:hover {
@@ -409,12 +525,99 @@ body {
   .invoice-row span:nth-child(4)::before { content: "Subtotal: "; }
 }
 
-/* Buscador */
-.search-bar {
-  margin-bottom: 20px;
+/* Botón flotante categoría */
+.dropdown-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 999;
 }
 
-.search-input {
+.fab-category-wrapper {
+  position: fixed;
+  bottom: 30px;
+  left: 200px;
+  z-index: 1000;
+}
+
+.fab-category {
+  position: static;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+  color: white;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(243, 156, 18, 0.4);
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fab-category:hover {
+  transform: scale(1.1);
+  box-shadow: 0 8px 25px rgba(243, 156, 18, 0.6);
+}
+
+.category-dropdown {
+  position: absolute;
+  bottom: 70px;
+  left: 0;
+  background: white;
+  border-radius: 15px;
+  padding: 8px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+  min-width: 220px;
+  animation: slideUp 0.2s ease;
+}
+
+.category-option {
+  display: block;
+  width: 100%;
+  padding: 10px 16px;
+  border: none;
+  background: none;
+  color: #333;
+  font-size: 1rem;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+}
+
+.category-option:hover {
+  background: #f0f0ff;
+  color: #667eea;
+}
+
+.category-option.active {
+  background: #667eea;
+  color: white;
+  font-weight: 600;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Filtro de categorías (select) */
+.category-filter {
+  margin-bottom: 25px;
+}
+
+.category-select {
   width: 100%;
   padding: 14px 20px;
   border: 2px solid rgba(255,255,255,0.3);
@@ -424,16 +627,13 @@ body {
   color: #333;
   outline: none;
   transition: all 0.3s ease;
+  cursor: pointer;
 }
 
-.search-input:focus {
+.category-select:focus {
   border-color: #667eea;
   box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
   background: white;
-}
-
-.search-input::placeholder {
-  color: #999;
 }
 
 /* Notificaciones */
